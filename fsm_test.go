@@ -27,7 +27,7 @@ func (p *TurnstileEventProcessor) OnExit(fromState string, args []interface{}) {
 	log.Printf("转门 %d 从状态 %s 改变", t.ID, fromState)
 }
 
-func (p *TurnstileEventProcessor) Action(action string, fromState string, toState string, args []interface{}) {
+func (p *TurnstileEventProcessor) Action(action string, fromState string, toState string, args []interface{}) error {
 	t := args[0].(*Turnstile)
 	t.EventCount++
 
@@ -38,6 +38,8 @@ func (p *TurnstileEventProcessor) Action(action string, fromState string, toStat
 		t.CoinCount++
 	default: //其它action
 	}
+
+	return nil
 }
 
 func (p *TurnstileEventProcessor) OnEnter(toState string, args []interface{}) {
