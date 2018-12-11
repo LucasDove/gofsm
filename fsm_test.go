@@ -1,6 +1,7 @@
 package fsm
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"testing"
@@ -18,7 +19,7 @@ type Turnstile struct {
 // TurnstileEventProcessor is used to handle turnstile actions.
 type TurnstileEventProcessor struct{}
 
-func (p *TurnstileEventProcessor) OnExit(fromState string, args []interface{}) {
+func (p *TurnstileEventProcessor) OnTryExit(fromState string, args []interface{}) {
 	t := args[0].(*Turnstile)
 	if t.State != fromState {
 		panic(fmt.Errorf("转门 %v 的状态与期望的状态 %s 不一致，可能在状态机外被改变了", t, fromState))
@@ -34,6 +35,7 @@ func (p *TurnstileEventProcessor) Action(action string, fromState string, toStat
 	switch action {
 	case "pass": //用户通过的action
 		t.PassCount++
+		return errors.New("pass failed")
 	case "check", "repeat-check": //刷卡或者投币的action
 		t.CoinCount++
 	default: //其它action
@@ -48,6 +50,11 @@ func (p *TurnstileEventProcessor) OnEnter(toState string, args []interface{}) {
 	t.States = append(t.States, toState)
 
 	log.Printf("转门 %d 的状态改变为 %s ", t.ID, toState)
+}
+
+func (p *TurnstileEventProcessor) OnFail(fromState string, args []interface{}) {
+	t := args[0].(*Turnstile)
+	log.Printf("转门 %d 执行action失败, 保持当前状态为 %s ", t.ID, fromState)
 }
 
 func TestFSM(t *testing.T) {
